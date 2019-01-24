@@ -46,7 +46,7 @@ dependencies {
   implementation "com.google.zxing:core:3.3.0"
   implementation "com.drewnoakes:metadata-extractor:2.9.1"
   implementation "com.google.android.gms:play-services-vision:${safeExtGet('googlePlayServicesVersion', '15.0.2')}"
-  implementation "androidx.exifinterface:exifinterface:1.0.0-beta01"
-  implementation "androidx.annotation:annotation:1.0.0-beta01"
-  implementation "androidx.legacy:legacy-support-v4:1.0.0-beta01"
+  implementation "androidx.exifinterface:exifinterface:1.0.0"
+  implementation "androidx.annotation:annotation:1.0.0"
+  implementation "androidx.legacy:legacy-support-v4:1.0.0"
 }
