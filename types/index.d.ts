@@ -42,7 +42,7 @@ type BarCodeType = Readonly<{
   ean8: any;
   pdf417: any;
   qr: any;
-  upce: any;
+  upc_e: any;
   interleaved2of5: any;
   itf14: any;
   datamatrix: any;
@@ -141,6 +141,7 @@ export interface RNCameraProps {
   captureAudio?: boolean;
 
   onCameraReady?(): void;
+  onStatusChange?(event: { cameraStatus: CameraStatus, recordAudioPermissionStatus: keyof RecordAudioPermissionStatus }): void;
   onMountError?(error: { message: string }): void;
 
   /** Value: float from 0 to 1.0 */
@@ -162,9 +163,16 @@ export interface RNCameraProps {
     bounds: [Point<string>, Point<string>] | { origin: Point<string>; size: Size<string> };
   }): void;
 
+  onGoogleVisionBarcodesDetected?(event: {
+    barcodes: Barcode[];
+    sourceRotation: number;
+    sourceHeight: number;
+    sourceWidth: number;
+    type: keyof GoogleVisionBarcodeType;
+  }): void;
+
   // -- FACE DETECTION PROPS
 
-  onGoogleVisionBarcodesDetected?(response: { barcodes: Barcode[] }): void;
   onFacesDetected?(response: { faces: Face[] }): void;
   onFaceDetectionError?(response: { isOperational: boolean }): void;
   faceDetectionMode?: keyof FaceDetectionMode;
@@ -198,6 +206,10 @@ interface Size<T = number> {
 }
 
 interface Barcode {
+  bounds: {
+    size: Size;
+    origin: Point;
+  };
   data: string;
   type: string;
 }
@@ -244,6 +256,7 @@ interface TakePictureOptions {
   width?: number;
   mirrorImage?: boolean;
   doNotSave?: boolean;
+  pauseAfterCapture?: boolean;
 
   /** Android only */
   skipProcessing?: boolean;
@@ -293,6 +306,7 @@ export class RNCamera extends Component<RNCameraProps & ViewProperties> {
 
   takePictureAsync(options?: TakePictureOptions): Promise<TakePictureResponse>;
   recordAsync(options?: RecordOptions): Promise<RecordResponse>;
+  refreshAuthorizationStatus(): Promise<void>;
   stopRecording(): void;
   pausePreview(): void;
   resumePreview(): void;

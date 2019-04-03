@@ -37,7 +37,11 @@ const requestPermissions = async (
       PermissionsAndroid.PERMISSIONS.CAMERA,
       params,
     );
-    hasCameraPermissions = cameraPermissionResult === PermissionsAndroid.RESULTS.GRANTED;
+    if (typeof cameraPermissionResult === 'boolean') {
+      hasCameraPermissions = cameraPermissionResult;
+    } else {
+      hasCameraPermissions = cameraPermissionResult === PermissionsAndroid.RESULTS.GRANTED;
+    }
   }
 
   if (captureAudio) {
@@ -49,7 +53,11 @@ const requestPermissions = async (
           PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
           params,
         );
-        hasRecordAudioPermissions = audioPermissionResult === PermissionsAndroid.RESULTS.GRANTED;
+        if (typeof audioPermissionResult === 'boolean') {
+          hasRecordAudioPermissions = audioPermissionResult
+        } else {
+          hasRecordAudioPermissions = audioPermissionResult === PermissionsAndroid.RESULTS.GRANTED;
+        }
       } else if (__DEV__) {
         // eslint-disable-next-line no-console
         console.warn(
@@ -135,11 +143,13 @@ type PropsType = typeof View.props & {
   focusDepth?: number,
   type?: number | string,
   onCameraReady?: Function,
+  onStatusChange?: Function,
   onBarCodeRead?: Function,
   onPictureSaved?: Function,
   onGoogleVisionBarcodesDetected?: Function,
   faceDetectionMode?: number,
   flashMode?: number | string,
+  exposure?: number,
   barCodeTypes?: Array<string>,
   googleVisionBarcodeType?: number,
   googleVisionBarcodeMode?: number,
@@ -248,6 +258,7 @@ export default class Camera extends React.Component<PropsType, StateType> {
   static ConversionTables = {
     type: CameraManager.Type,
     flashMode: CameraManager.FlashMode,
+    exposure: CameraManager.Exposure,
     autoFocus: CameraManager.AutoFocus,
     whiteBalance: CameraManager.WhiteBalance,
     faceDetectionMode: (CameraManager.FaceDetection || {}).Mode,
@@ -264,6 +275,7 @@ export default class Camera extends React.Component<PropsType, StateType> {
     focusDepth: PropTypes.number,
     onMountError: PropTypes.func,
     onCameraReady: PropTypes.func,
+    onStatusChange: PropTypes.func,
     onBarCodeRead: PropTypes.func,
     onPictureSaved: PropTypes.func,
     onGoogleVisionBarcodesDetected: PropTypes.func,
@@ -277,6 +289,7 @@ export default class Camera extends React.Component<PropsType, StateType> {
     googleVisionBarcodeMode: PropTypes.number,
     type: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
     flashMode: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    exposure: PropTypes.number,
     whiteBalance: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
     autoFocus: PropTypes.oneOfType([PropTypes.string, PropTypes.number, PropTypes.bool]),
     autoFocusPointOfInterest: PropTypes.shape({ x: PropTypes.number, y: PropTypes.number }),
@@ -300,6 +313,7 @@ export default class Camera extends React.Component<PropsType, StateType> {
     type: CameraManager.Type.back,
     autoFocus: CameraManager.AutoFocus.on,
     flashMode: CameraManager.FlashMode.off,
+    exposure: 0,
     whiteBalance: CameraManager.WhiteBalance.auto,
     faceDetectionMode: (CameraManager.FaceDetection || {}).fast,
     barCodeTypes: Object.values(CameraManager.BarCodeType),
@@ -465,6 +479,12 @@ export default class Camera extends React.Component<PropsType, StateType> {
     }
   };
 
+  _onStatusChange = () => {
+    if (this.props.onStatusChange) {
+      this.props.onStatusChange({ cameraStatus: this.getStatus(), recordAudioPermissionStatus: this.state.recordAudioPermissionStatus });
+    }
+  };
+
   _onPictureSaved = ({ nativeEvent }: EventCallbackArgumentsType) => {
     if (this.props.onPictureSaved) {
       this.props.onPictureSaved(nativeEvent);
@@ -504,26 +524,49 @@ export default class Camera extends React.Component<PropsType, StateType> {
     this._isMounted = false;
   }
 
-  async componentDidMount() {
+  async arePermissionsGranted() {
     const { hasCameraPermissions, hasRecordAudioPermissions } = await requestPermissions(
       this.props.captureAudio,
       CameraManager,
       this.props.permissionDialogTitle,
       this.props.permissionDialogMessage,
     );
-    if (this._isMounted === false) {
-      return;
-    }
-
     const recordAudioPermissionStatus = hasRecordAudioPermissions
       ? RecordAudioPermissionStatusEnum.AUTHORIZED
       : RecordAudioPermissionStatusEnum.NOT_AUTHORIZED;
+    return { hasCameraPermissions, recordAudioPermissionStatus };
+  }
+
+  async refreshAuthorizationStatus() {
+    const {
+      hasCameraPermissions,
+      recordAudioPermissionStatus,
+    } = await this.arePermissionsGranted();
+    if (this._isMounted === false) {
+      return;
+    }
 
     this.setState({
       isAuthorized: hasCameraPermissions,
       isAuthorizationChecked: true,
       recordAudioPermissionStatus,
     });
+  }
+
+  async componentDidMount() {
+    const {
+      hasCameraPermissions,
+      recordAudioPermissionStatus,
+    } = await this.arePermissionsGranted();
+    if (this._isMounted === false) {
+      return;
+    }
+
+    this.setState({
+      isAuthorized: hasCameraPermissions,
+      isAuthorizationChecked: true,
+      recordAudioPermissionStatus,
+    }, this._onStatusChange);
   }
 
   getStatus = (): Status => {

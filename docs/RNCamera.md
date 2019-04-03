@@ -179,13 +179,16 @@ Most cameras have a Auto Focus feature. It adjusts your camera lens position aut
 
 Use the `autoFocus` property to specify the auto focus setting of your camera. `RNCamera.Constants.AutoFocus.on` turns it ON, `RNCamera.Constants.AutoFocus.off` turns it OFF.
 
-#### `iOS` `autoFocusPointOfInterest`
+#### `autoFocusPointOfInterest`
 
 Values: Object `{ x: 0.5, y: 0.5 }`.
 
 Setting this property causes the auto focus feature of the camera to attempt to focus on the part of the image at this coordiate.
 
 Coordinates values are measured as floats from `0` to `1.0`. `{ x: 0, y: 0 }` will focus on the top left of the image, `{ x: 1, y: 1 }` will be the bottom right. Values are based on landscape mode with the home button on the right—this applies even if the device is in portrait mode.
+
+Hint:
+for portrait orientation, apply 90° clockwise rotation + translation: [Example](https://gist.github.com/Craigtut/6632a9ac7cfff55e74fb561862bc4edb)
 
 #### `captureAudio`
 
@@ -304,6 +307,15 @@ Function to be called when native code emit onCameraReady event, when camera is 
 #### `onMountError`
 
 Function to be called when native code emit onMountError event, when there is a problem mounting the camera.
+
+#### `onStatusChange`
+
+Function to be called when native code emits status changes in relation to authorization changes.
+
+Event contains the following fields:
+
+- `cameraStatus` - one of the [CameraStatus](#status) values
+- `recordAudioPermissionStatus` - one of the [RecordAudioPermissionStatus](#recordAudioPermissionStatus) values
 
 #### `Android` `onPictureTaken`
 
@@ -490,7 +502,8 @@ Supported options:
     - `ios` Specifies capture settings suitable for CIF quality (352x288 pixel) video output.
     - `android` Not supported.
 
-- `videoBitrate`. (int greater than 0) This option specifies a desired video bitrate.  For example, 5\*1000\*1000 would be 5Mbps.
+- `videoBitrate`. (int greater than 0) This option specifies a desired video bitrate. For example, 5\*1000\*1000 would be 5Mbps.
+
   - `ios` Not supported.
   - `android` Supported.
 
@@ -512,7 +525,7 @@ Supported options:
 
 - `maxFileSize` (int greater than 0). Specifies the maximum file size, in bytes, of the video to be recorded. For 1mb, for example, use 1\*1024\*1024. If nothing is specified, no size limit will be used.
 
-- `mute` (any value). (_This value will automatically be set to true if the `captureAudio` has not been passed to the Camera component_) If this flag is given in the option with any value, the video to be recorded will be mute. If nothing is specified, video will NOT be muted.  
+- `mute` (any value). (_This value will automatically be set to true if the `captureAudio` has not been passed to the Camera component_) If this flag is given in the option with any value, the video to be recorded will be mute. If nothing is specified, video will NOT be muted.
   **Note:** The recommended way of recording audio without sound passing captureAudio: false to the Camera component.
   The `mute` parameter is likely to become deprecated in the near future.
 
@@ -527,6 +540,13 @@ The promise will be fulfilled with an object with some of the following properti
 - `deviceOrientation`: (number) orientation of the device
 
 - `iOS` `codec`: the codec of the recorded video. One of `RNCamera.Constants.VideoCodec`
+
+- `isRecordingInterrupted`: (boolean) whether the app has been minimized while recording
+
+#### `refreshAuthorizationStatus: Promise<void>`
+
+Allows to make RNCamera check Permissions again and set status accordingly.  
+Making it possible to refresh status of RNCamera after user initially rejected the permissions.
 
 #### `stopRecording: void`
 
@@ -552,13 +572,21 @@ iOS only. Returns a promise. The promise will be fulfilled with a boolean indica
 
 This component supports subviews, so if you wish to use the camera view as a background or if you want to layout buttons/images/etc. inside the camera then you can do that.
 
+**Example subview:**
+
+### react-native-barcode-mask
+
+A Barcode and QR code UI mask which can be use to render a scanning layout on camera with customizable styling.
+
+Read more about [react-native-barcode-mask](https://github.com/shahnawaz/react-native-barcode-mask) here.
+
 ## Testing
 
 To learn about how to test components which uses `RNCamera` check its [documentation about testing](./tests.md).
 
 ## Example
 
-To see more of the `RNCamera` in action, with Face Detection, you can check out the source in [RNCamera Example](https://github.com/react-native-community/rncamera-example) repository.
+To see more of the `RNCamera` in action you can check out the [RNCamera examples directory](https://github.com/react-native-community/react-native-camera/tree/master/examples).
 
 ## Open Collective
 

@@ -9,11 +9,7 @@
 #import "RNFaceDetectorManagerStub.h"
 #endif
 
-#if __has_include("TextDetectorManager.h")
 #import "TextDetectorManager.h"
-#else
-#import "TextDetectorManagerStub.h"
-#endif
 
 @class RNCamera;
 
@@ -39,6 +35,8 @@
 @property (assign, nonatomic) NSInteger whiteBalance;
 @property (assign, nonatomic) AVCaptureSessionPreset pictureSize;
 @property (nonatomic, assign) BOOL isReadingBarCodes;
+@property (nonatomic, assign) BOOL isRecording;
+@property (nonatomic, assign) BOOL isRecordingInterrupted;
 @property (nonatomic, assign) BOOL isDetectingFaces;
 @property (nonatomic, assign) BOOL canReadText;
 @property(assign, nonatomic) AVVideoCodecType videoCodecType;
