@@ -380,8 +380,8 @@ class RCTCameraViewFinder extends TextureView implements TextureView.SurfaceText
             try {
                 // rotate for zxing if orientation is portrait
                 Result result = getBarcodeAnyOrientation();
-                if (result == null){
-                    throw new Exception();
+                if (result == null) {
+                    return null;
                 }
 
                 ReactContext reactContext = RCTCameraModule.getReactContextSingleton();
